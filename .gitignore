@@ -38,5 +38,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Github Copilot
+# Custom ignore rules
 .github/
+NOTES.txt

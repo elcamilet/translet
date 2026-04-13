@@ -87,11 +87,23 @@
         <section class="flex min-h-[280px] flex-col overflow-hidden rounded-lg bg-gray-800">
           <div class="flex items-center justify-between border-b border-gray-700 px-4 py-2.5">
             <span class="text-teal-400 font-semibold uppercase tracking-wider text-base">original</span>
-            <button id="clear-btn" title="Limpiar" class="h-7 w-7 inline-flex items-center justify-center rounded text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-                <path d="M18 6 6 18M6 6l12 12"/>
-              </svg>
-            </button>
+            <div class="flex items-center gap-1">
+              <button id="paste-btn" title="Pegar del portapapeles" aria-label="Pegar del portapapeles" class="h-7 inline-flex items-center justify-center rounded px-2 text-xs font-medium text-gray-300 hover:text-gray-200 hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#2DD4BF" viewBox="0 0 256 256">
+                  <path
+                    d="M208,48V216a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V48a8,8,0,0,1,8-8H96a39.83,39.83,0,0,0-8,24v8h80V64a39.83,39.83,0,0,0-8-24h40A8,8,0,0,1,208,48Z"
+                    opacity="0.2"></path>
+                  <path
+                    d="M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm56-64V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V48A16,16,0,0,1,56,32H92.26a47.92,47.92,0,0,1,71.48,0H200A16,16,0,0,1,216,48ZM96,64h64a32,32,0,0,0-64,0ZM200,48H173.25A47.93,47.93,0,0,1,176,64v8a8,8,0,0,1-8,8H88a8,8,0,0,1-8-8V64a47.93,47.93,0,0,1,2.75-16H56V216H200Z">
+                  </path>
+                </svg>
+              </button>
+              <button id="clear-btn" title="Limpiar" class="h-7 w-7 inline-flex items-center justify-center rounded text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <textarea id="input-text" placeholder="Escribe o pega el texto aquí…" spellcheck="true" aria-label="Texto a traducir" class="flex-1 w-full resize-none border-none bg-transparent p-4 text-base leading-7 text-white placeholder-gray-400 outline-none"></textarea>
           <div class="flex items-center justify-between border-t border-gray-700 px-4 py-2">
@@ -101,8 +113,16 @@
         </section>
 
         <section class="flex min-h-[280px] flex-col overflow-hidden rounded-lg bg-gray-800">
-          <div class="border-b border-gray-700 px-4 py-2.5">
+          <div class="flex items-center justify-between border-b border-gray-700 px-4 py-2.5">
             <span class="text-teal-400 font-semibold uppercase tracking-wider text-base">Traducción</span>
+            <button id="copy-btn" title="Copiar traducción" aria-label="Copiar traducción" class="h-7 inline-flex items-center justify-center rounded px-2 text-xs font-medium text-gray-300 hover:text-gray-200 hover:bg-gray-700 transition-colors disabled:cursor-not-allowed disabled:opacity-40" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#2DD4BF" viewBox="0 0 256 256">
+                <path d="M216,40V168H168V88H88V40Z" opacity="0.2"></path>
+                <path
+                  d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z">
+                </path>
+              </svg>
+            </button>
           </div>
           <textarea id="output-text" placeholder="La traducción aparecerá aquí…" readonly aria-label="Texto traducido" aria-live="polite" class="flex-1 w-full resize-none border-none bg-transparent p-4 text-base leading-7 text-white placeholder-gray-400 outline-none"></textarea>
           <div class="flex items-center justify-between border-t border-gray-700 px-4 py-2">
@@ -276,7 +296,7 @@ document.getElementById("swap-btn").onclick = function(){
   if(out){
     document.getElementById("input-text").value=out;
     document.getElementById("output-text").value="";
-    updateCC(); document.getElementById("out-count").textContent="0 caracteres"; hideDet();
+    updateCC(); document.getElementById("out-count").textContent="0 caracteres"; refreshCopyState(); hideDet();
   }
   var btn=document.getElementById("swap-btn");
   btn.style.transform="rotate(180deg)"; setTimeout(function(){ btn.style.transform=""; },300);
@@ -285,6 +305,7 @@ document.getElementById("swap-btn").onclick = function(){
 /* ── Helpers ── */
 var inputEl  = document.getElementById("input-text");
 var outputEl = document.getElementById("output-text");
+var copyBtn = document.getElementById("copy-btn");
 
 function updateCC(){ var n=inputEl.value.length; document.getElementById("char-count").textContent=n===1?"1 carácter":(n.toLocaleString("es")+" caracteres"); }
 function setStatus(m,load){ document.getElementById("status").textContent=m||""; document.getElementById("spinner").classList.toggle("hidden", !load); }
@@ -292,12 +313,83 @@ function hideDet(){ var d=document.getElementById("detected"); d.textContent="";
 function showDet(code){ if(!code||srcSel.value!=="auto"){ hideDet(); return; } var d=document.getElementById("detected"); d.textContent="Detectado: "+(NAMES[code.toUpperCase()]||code); d.classList.remove("hidden"); }
 function showErr(m){ var b=document.getElementById("err-bar"); document.getElementById("err-msg").textContent=m; b.classList.remove("hidden"); b.classList.add("flex"); }
 function hideErr(){ var b=document.getElementById("err-bar"); b.classList.add("hidden"); b.classList.remove("flex"); }
+function refreshCopyState(){ copyBtn.disabled=!outputEl.value.trim(); }
+function focusInputForManualPaste(msg){
+  inputEl.focus();
+  inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+  setStatus(msg||"Pulsa Ctrl+V (o Cmd+V) para pegar.");
+}
+function getClipboardReadPermission(){
+  if(!navigator.permissions||typeof navigator.permissions.query!=="function"){
+    return Promise.resolve("prompt");
+  }
+  return navigator.permissions.query({ name: "clipboard-read" })
+    .then(function(permission){ return permission.state; })
+    .catch(function(){ return "prompt"; });
+}
 
 document.getElementById("err-close").onclick = hideErr;
+document.getElementById("paste-btn").onclick = function(){
+  if(!navigator.clipboard||typeof navigator.clipboard.readText!=="function"){
+    focusInputForManualPaste("Pulsa Ctrl+V (o Cmd+V) para pegar.");
+    return;
+  }
+  getClipboardReadPermission().then(function(state){
+    if(state!=="granted"){
+      focusInputForManualPaste("Pulsa Ctrl+V (o Cmd+V) para pegar sin pedir permisos cada vez.");
+      if(state==="denied"){
+        showErr("Permiso de portapapeles bloqueado. Actívalo en el navegador para pegar con un clic.");
+      }else{
+        hideErr();
+      }
+      return;
+    }
+    navigator.clipboard.readText()
+      .then(function(text){
+        if(!text){
+          setStatus("El portapapeles está vacío.");
+          return;
+        }
+        hideErr();
+        inputEl.value=text;
+        inputEl.focus();
+        inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        setStatus("Texto pegado.");
+      })
+      .catch(function(err){
+        if(err&&err.name==="NotAllowedError"){
+          hideErr();
+          focusInputForManualPaste("Pulsa Ctrl+V (o Cmd+V) para pegar.");
+          return;
+        }
+        showErr("No se pudo leer el portapapeles. Revisa los permisos del navegador.");
+        return;
+      });
+  });
+};
+copyBtn.onclick = function(){
+  var text=outputEl.value;
+  if(!text.trim()){
+    setStatus("No hay traducción para copiar.");
+    return;
+  }
+  if(navigator.clipboard&&typeof navigator.clipboard.writeText==="function"){
+    navigator.clipboard.writeText(text)
+      .then(function(){ setStatus("Traducción copiada."); })
+      .catch(function(){ showErr("No se pudo copiar al portapapeles."); });
+    return;
+  }
+  outputEl.focus();
+  outputEl.select();
+  if(document.execCommand("copy")) setStatus("Traducción copiada.");
+  else showErr("No se pudo copiar al portapapeles.");
+  outputEl.setSelectionRange(outputEl.value.length, outputEl.value.length);
+};
 
 document.getElementById("clear-btn").onclick = function(){
   inputEl.value=""; outputEl.value=""; updateCC();
   document.getElementById("out-count").textContent="0 caracteres";
+  refreshCopyState();
   setStatus(); hideDet(); hideErr(); inputEl.focus();
 };
 
@@ -309,7 +401,7 @@ document.getElementById("tr-btn").onclick = doTranslate;
 var dbt=null;
 inputEl.addEventListener("input", function(){
   clearTimeout(dbt);
-  if(!inputEl.value.trim()){ outputEl.value=""; document.getElementById("out-count").textContent="0 caracteres"; setStatus(); hideDet(); return; }
+  if(!inputEl.value.trim()){ outputEl.value=""; document.getElementById("out-count").textContent="0 caracteres"; refreshCopyState(); setStatus(); hideDet(); return; }
   dbt=setTimeout(doTranslate, 700);
 });
 
@@ -341,6 +433,7 @@ function doTranslate(){
       var tr=res.data.translations[0];
       outputEl.value=tr.text;
       var n=tr.text.length; document.getElementById("out-count").textContent=n===1?"1 carácter":(n.toLocaleString("es")+" caracteres");
+      refreshCopyState();
       showDet(tr.detected_source_language); setStatus(); fetchUsage();
     })
     .catch(function(e){ showErr("Error de red. ¿El servidor está en marcha?"); setStatus(); console.error(e); })
