@@ -3,7 +3,7 @@ services:
     build: .
     image: elcamilet/translet:latest
     ports:
-      - "3000:3000"
+      - "${PORT}:3000"
     environment:
       - DEEPL_API_KEY=${DEEPL_API_KEY}
       - PORT=${PORT}
