@@ -1,10 +1,10 @@
 services:
   translet:
     build: .
-    image: translet:latest
+    image: elcamilet/translet:latest
     ports:
       - "3000:3000"
     environment:
       - DEEPL_API_KEY=${DEEPL_API_KEY}
-      - PORT=3000
+      - PORT=${PORT}
     restart: unless-stopped
