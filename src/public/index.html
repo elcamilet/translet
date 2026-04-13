@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "red-camilet": {
+              500: "#fb7185"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1f2937; }
+    ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-white text-base flex flex-col">
+
+  <header class="text-center py-12 px-4">
+    <h1 class="text-6xl font-bold leading-none tracking-tight mb-4">
+      <span class="text-red-camilet-500">Trans</span><span class="text-white">let</span>
+    </h1>
+    <span class="text-xl text-gray-300">
+      Traductor simple, sin telemetría ni historias.
+    </span>
+  </header>
+
+  <div id="pm-overlay" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-xl max-h-[80vh] overflow-hidden rounded-lg bg-gray-800 shadow-2xl p-6 flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <span class="text-teal-400 font-semibold text-base">Idiomas favoritos</span>
+        <button id="pm-close" aria-label="Cerrar" class="h-7 w-7 inline-flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-hidden">
+        <div class="flex flex-col gap-2 min-h-0">
+          <span class="text-gray-400 font-semibold uppercase tracking-wider text-base">Origen</span>
+          <div id="pm-list-src" class="max-h-[42vh] overflow-y-auto space-y-0.5"></div>
+        </div>
+        <div class="flex flex-col gap-2 min-h-0">
+          <span class="text-gray-400 font-semibold uppercase tracking-wider text-base">Destino</span>
+          <div id="pm-list-dst" class="max-h-[42vh] overflow-y-auto space-y-0.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="flex-1 container mx-auto px-4 max-w-4xl">
+    <div class="space-y-6">
+      <div class="flex flex-wrap sm:flex-nowrap items-center gap-3">
+        <div class="relative flex-1 min-w-[12rem] sm:min-w-0">
+          <select id="lang-src" aria-label="Idioma de origen" class="w-full appearance-none rounded-lg bg-gray-700 px-4 py-2.5 pr-16 font-medium text-white transition-colors hover:border-teal-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"></select>
+          <button id="pin-open" title="Gestionar favoritos" aria-label="Gestionar favoritos" class="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 inline-flex items-center justify-center rounded text-gray-400 hover:text-teal-400 transition-colors">★</button>
+          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">▾</span>
+        </div>
+        <button id="swap-btn" title="Intercambiar idiomas" aria-label="Intercambiar" class="order-3 sm:order-none mx-auto sm:mx-0 h-10 w-10 shrink-0 inline-flex items-center justify-center rounded-lg bg-gray-700 text-gray-400 transition-all hover:border-teal-400 hover:text-teal-400 hover:bg-teal-400/10">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/>
+          </svg>
+        </button>
+        <div class="relative flex-1 min-w-[12rem] sm:min-w-0">
+          <select id="lang-dst" aria-label="Idioma de destino" class="w-full appearance-none rounded-lg bg-gray-700 px-4 py-2.5 pr-10 font-medium text-white transition-colors hover:border-teal-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"></select>
+          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">▾</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <section class="flex min-h-[280px] flex-col overflow-hidden rounded-lg bg-gray-800">
+          <div class="flex items-center justify-between border-b border-gray-700 px-4 py-2.5">
+            <span class="text-teal-400 font-semibold uppercase tracking-wider text-base">original</span>
+            <button id="clear-btn" title="Limpiar" class="h-7 w-7 inline-flex items-center justify-center rounded text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <textarea id="input-text" placeholder="Escribe o pega el texto aquí…" spellcheck="true" aria-label="Texto a traducir" class="flex-1 w-full resize-none border-none bg-transparent p-4 text-base leading-7 text-white placeholder-gray-400 outline-none"></textarea>
+          <div class="flex items-center justify-between border-t border-gray-700 px-4 py-2">
+            <span id="char-count" class="text-gray-400">0 caracteres</span>
+            <span id="detected" class="hidden text-teal-400 font-medium"></span>
+          </div>
+        </section>
+
+        <section class="flex min-h-[280px] flex-col overflow-hidden rounded-lg bg-gray-800">
+          <div class="border-b border-gray-700 px-4 py-2.5">
+            <span class="text-teal-400 font-semibold uppercase tracking-wider text-base">Traducción</span>
+          </div>
+          <textarea id="output-text" placeholder="La traducción aparecerá aquí…" readonly aria-label="Texto traducido" aria-live="polite" class="flex-1 w-full resize-none border-none bg-transparent p-4 text-base leading-7 text-white placeholder-gray-400 outline-none"></textarea>
+          <div class="flex items-center justify-between border-t border-gray-700 px-4 py-2">
+            <span id="out-count" class="text-gray-400">0 caracteres</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="flex justify-center">
+        <button id="tr-btn" class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-8 py-3 font-semibold text-white shadow transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-600">
+          Traducir
+        </button>
+      </div>
+
+      <div class="flex min-h-5 items-center justify-center gap-2 text-gray-400">
+        <div id="spinner" class="hidden h-3.5 w-3.5 rounded-full border-2 border-gray-700 border-t-teal-400 animate-spin"></div>
+        <span id="status"></span>
+      </div>
+
+      <div id="err-bar" class="hidden items-center gap-3 bg-rose-500/10 border border-rose-500/30 px-6 py-3 text-rose-400">
+        <span id="err-msg"></span>
+        <button id="err-close" aria-label="Cerrar" class="ml-auto opacity-70 hover:opacity-100 transition-opacity">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div id="usage-bar" class="hidden max-w-[340px] mx-auto">
+        <div class="mb-1.5 flex justify-between text-gray-400">
+          <span>Consumo mensual DeepL</span>
+          <span id="usage-text" class="font-semibold text-gray-300">—</span>
+        </div>
+        <div class="h-1 overflow-hidden rounded-full bg-gray-700">
+          <div id="usage-fill" class="h-full rounded-full bg-teal-400 transition-[width] duration-700" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-gray-800 border-t border-gray-700 py-4">
+    <div class="container mx-auto px-4 text-center">
+      <p class="flex items-center justify-center gap-2">
+        Hecho con
+        <svg style="width:1.25rem;height:1.25rem;display:inline-block" viewBox="0 0 163.83836 158.46089" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path style="fill:#ec003f" d="m 173.27751,117.19664 c 8.95443,-15.99188 16.93438,-36.030858 12.4775,-53.550028 -4.45711,-17.51918 -17.45013,-31.20329 -34.08452,-35.89744 -16.63504,-4.69454 -34.38461,0.30236 -46.56213,13.13948 -12.176948,-12.82427 -29.925238,-17.83326 -46.559258,-13.13948 -16.63454,4.69378 -29.627413,18.37826 -34.084593,35.89744 -4.457596,17.5188 3.520617,37.558148 12.474703,53.550028 15.59737,27.85728 68.169148,67.28063 68.169148,67.28063 0,0 52.5711,-39.42373 68.16915,-67.28063 z" transform="translate(-23.190318,-26.016384)"/>
+        </svg>
+        especialmente para ti!
+      </p>
+      Motor: <a href="https://www.deepl.com" target="_blank" rel="noopener noreferrer" class="text-teal-400 hover:underline"> DeepL</a> -
+      <a href="https://elcamilet.com" target="_blank" rel="noopener noreferrer" class="text-teal-400 hover:underline"> elCamilet.com</a>
+    </div>
+  </footer>
+
+  <script>
+const SRC_LANGS = [
+  ["auto","Detectar idioma"],
+  ["AR","Árabe"],["BG","Búlgaro"],["CA","Catalán"],["CS","Checo"],
+  ["ZH","Chino"],["KO","Coreano"],["DA","Danés"],["SK","Eslovaco"],
+  ["SL","Esloveno"],["ES","Castellano"],["ET","Estonio"],["EU","Euskera"],
+  ["FI","Finlandés"],["FR","Francés"],["GL","Gallego"],["DE","Alemán"],
+  ["EL","Griego"],["HU","Húngaro"],["ID","Indonesio"],["EN","Inglés"],
+  ["IT","Italiano"],["JA","Japonés"],["LV","Letón"],["LT","Lituano"],
+  ["NB","Noruego"],["NL","Neerlandés"],["PL","Polaco"],["PT","Portugués"],
+  ["RO","Rumano"],["RU","Ruso"],["SV","Sueco"],["TR","Turco"],["UK","Ucraniano"],
+];
+const DST_LANGS = [
+  ["AR","Árabe"],["BG","Búlgaro"],["CA","Catalán"],["CS","Checo"],
+  ["ZH-HANS","Chino (simplificado)"],["ZH-HANT","Chino (tradicional)"],
+  ["KO","Coreano"],["DA","Danés"],["SK","Eslovaco"],["SL","Esloveno"],
+  ["ES","Castellano"],["ES-419","Castellano (Latinoamérica)"],
+  ["ET","Estonio"],["EU","Euskera"],["FI","Finlandés"],["FR","Francés"],
+  ["GL","Gallego"],["DE","Alemán"],["EL","Griego"],["HU","Húngaro"],
+  ["ID","Indonesio"],["EN-GB","Inglés (Reino Unido)"],["EN-US","Inglés (EE. UU.)"],
+  ["IT","Italiano"],["JA","Japonés"],["LV","Letón"],["LT","Lituano"],
+  ["NB","Noruego"],["NL","Neerlandés"],["PL","Polaco"],
+  ["PT-PT","Portugués (europeo)"],["PT-BR","Portugués (Brasil)"],
+  ["RO","Rumano"],["RU","Ruso"],["SV","Sueco"],["TR","Turco"],["UK","Ucraniano"],
+];
+const NAMES = Object.fromEntries([...SRC_LANGS,...DST_LANGS].map(([c,n])=>[c,n]));
+
+const DEF_SRC = ["auto","EN","CA","ES"];
+const DEF_DST = ["EN-US","CA","ES"];
+
+function lsGet(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch{ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} }
+
+var pinSrc = lsGet("pin_src", DEF_SRC);
+var pinDst = lsGet("pin_dst", DEF_DST);
+
+function buildSel(sel, langs, pinned, keepVal){
+  var prev = keepVal !== undefined ? keepVal : sel.value;
+  sel.innerHTML = "";
+  var grpFav = document.createElement("optgroup"); grpFav.label = "★ Favoritos";
+  var grpAll = document.createElement("optgroup"); grpAll.label = "Todos los idiomas";
+  langs.forEach(function(pair){
+    var o = document.createElement("option");
+    o.value = pair[0]; o.textContent = pair[1];
+    (pinned.indexOf(pair[0]) >= 0 ? grpFav : grpAll).appendChild(o);
+  });
+  if(grpFav.children.length) sel.appendChild(grpFav);
+  if(grpAll.children.length) sel.appendChild(grpAll);
+  var opts = Array.from(sel.options);
+  if(opts.some(function(o){ return o.value===prev; })) sel.value = prev;
+  else if(opts.length) sel.value = opts[0].value;
+}
+
+var srcSel = document.getElementById("lang-src");
+var dstSel = document.getElementById("lang-dst");
+buildSel(srcSel, SRC_LANGS, pinSrc, "auto");
+buildSel(dstSel, DST_LANGS, pinDst, "ES");
+
+/* ── Modal favoritos ── */
+var overlay = document.getElementById("pm-overlay");
+function closeModal(){
+  overlay.classList.add("hidden");
+  overlay.classList.remove("flex");
+}
+function openModal(){
+  renderModal();
+  overlay.classList.remove("hidden");
+  overlay.classList.add("flex");
+}
+
+function renderModal(){
+  function fill(id, langs, pinned, onToggle){
+    var el = document.getElementById(id);
+    el.innerHTML = "";
+    langs.forEach(function(pair){
+      var row = document.createElement("label");
+      row.className = "flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer select-none text-base text-gray-300 hover:bg-gray-700";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = pinned.indexOf(pair[0]) >= 0;
+      cb.className = "h-4 w-4 shrink-0 cursor-pointer accent-teal-400";
+      cb.addEventListener("change", function(){ onToggle(pair[0], cb.checked); });
+      var lbl = document.createElement("span");
+      lbl.textContent = pair[1];
+      row.appendChild(cb);
+      row.appendChild(lbl);
+      el.appendChild(row);
+    });
+  }
+  fill("pm-list-src", SRC_LANGS, pinSrc, function(code, on){
+    pinSrc = on ? pinSrc.concat(code) : pinSrc.filter(function(c){ return c!==code; });
+    lsSet("pin_src", pinSrc); buildSel(srcSel, SRC_LANGS, pinSrc);
+  });
+  fill("pm-list-dst", DST_LANGS, pinDst, function(code, on){
+    pinDst = on ? pinDst.concat(code) : pinDst.filter(function(c){ return c!==code; });
+    lsSet("pin_dst", pinDst); buildSel(dstSel, DST_LANGS, pinDst);
+  });
+}
+
+document.getElementById("pin-open").onclick = openModal;
+document.getElementById("pm-close").onclick = closeModal;
+overlay.onclick = function(e){ if(e.target===overlay) closeModal(); };
+document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeModal(); });
+
+/* ── Swap ── */
+document.getElementById("swap-btn").onclick = function(){
+  var sv=srcSel.value, dv=dstSel.value, out=document.getElementById("output-text").value;
+  var base=dv.split("-")[0];
+  if(sv==="auto"){ dstSel.value="ES"; }
+  else{
+    var o=Array.from(dstSel.options).find(function(o){ return o.value.indexOf(sv)===0; });
+    if(o) dstSel.value=o.value;
+  }
+  var so=Array.from(srcSel.options).find(function(o){ return o.value===base||o.value===dv; });
+  if(so) srcSel.value=so.value;
+  if(out){
+    document.getElementById("input-text").value=out;
+    document.getElementById("output-text").value="";
+    updateCC(); document.getElementById("out-count").textContent="0 caracteres"; hideDet();
+  }
+  var btn=document.getElementById("swap-btn");
+  btn.style.transform="rotate(180deg)"; setTimeout(function(){ btn.style.transform=""; },300);
+};
+
+/* ── Helpers ── */
+var inputEl  = document.getElementById("input-text");
+var outputEl = document.getElementById("output-text");
+
+function updateCC(){ var n=inputEl.value.length; document.getElementById("char-count").textContent=n===1?"1 carácter":(n.toLocaleString("es")+" caracteres"); }
+function setStatus(m,load){ document.getElementById("status").textContent=m||""; document.getElementById("spinner").classList.toggle("hidden", !load); }
+function hideDet(){ var d=document.getElementById("detected"); d.textContent=""; d.classList.add("hidden"); }
+function showDet(code){ if(!code||srcSel.value!=="auto"){ hideDet(); return; } var d=document.getElementById("detected"); d.textContent="Detectado: "+(NAMES[code.toUpperCase()]||code); d.classList.remove("hidden"); }
+function showErr(m){ var b=document.getElementById("err-bar"); document.getElementById("err-msg").textContent=m; b.classList.remove("hidden"); b.classList.add("flex"); }
+function hideErr(){ var b=document.getElementById("err-bar"); b.classList.add("hidden"); b.classList.remove("flex"); }
+
+document.getElementById("err-close").onclick = hideErr;
+
+document.getElementById("clear-btn").onclick = function(){
+  inputEl.value=""; outputEl.value=""; updateCC();
+  document.getElementById("out-count").textContent="0 caracteres";
+  setStatus(); hideDet(); hideErr(); inputEl.focus();
+};
+
+inputEl.addEventListener("input", updateCC);
+srcSel.onchange = function(){ hideDet(); if(inputEl.value.trim()) doTranslate(); };
+dstSel.onchange = function(){ if(inputEl.value.trim()) doTranslate(); };
+document.getElementById("tr-btn").onclick = doTranslate;
+
+var dbt=null;
+inputEl.addEventListener("input", function(){
+  clearTimeout(dbt);
+  if(!inputEl.value.trim()){ outputEl.value=""; document.getElementById("out-count").textContent="0 caracteres"; setStatus(); hideDet(); return; }
+  dbt=setTimeout(doTranslate, 700);
+});
+
+/* ── Usage ── */
+function fetchUsage(){
+  fetch("/api/usage").then(function(r){ return r.ok?r.json():null; }).then(function(d){
+    if(!d) return;
+    var pct=d.character_limit>0?(d.character_count/d.character_limit)*100:0;
+    document.getElementById("usage-text").textContent=d.character_count.toLocaleString("es")+" / "+d.character_limit.toLocaleString("es")+" ("+pct.toFixed(1)+"%)";
+    var f=document.getElementById("usage-fill");
+    f.style.width=Math.min(pct,100)+"%";
+    f.className="h-full rounded-full transition-[width] duration-700 "+(pct>=90?"bg-rose-400":pct>=70?"bg-amber-400":"bg-teal-400");
+    document.getElementById("usage-bar").classList.remove("hidden");
+  }).catch(function(){});
+}
+fetchUsage();
+
+/* ── Translate ── */
+function doTranslate(){
+  var text=inputEl.value.trim(); if(!text) return;
+  var src=srcSel.value, dst=dstSel.value;
+  setStatus("Traduciendo…",true);
+  document.getElementById("tr-btn").disabled=true; hideErr();
+  var body={text:[text],target_lang:dst}; if(src!=="auto") body.source_lang=src;
+  fetch("/api/translate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,status:r.status,data:d}; }); })
+    .then(function(res){
+      if(!res.ok){ showErr(res.data.error||"Error del servidor ("+res.status+")."); setStatus(); return; }
+      var tr=res.data.translations[0];
+      outputEl.value=tr.text;
+      var n=tr.text.length; document.getElementById("out-count").textContent=n===1?"1 carácter":(n.toLocaleString("es")+" caracteres");
+      showDet(tr.detected_source_language); setStatus(); fetchUsage();
+    })
+    .catch(function(e){ showErr("Error de red. ¿El servidor está en marcha?"); setStatus(); console.error(e); })
+    .finally(function(){ document.getElementById("tr-btn").disabled=false; });
+}
+  </script>
+</body>
+</html>
